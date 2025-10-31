@@ -1,0 +1,51 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+#container {
+  display: flex;
+  height: 100vh;
+}
+
+#side-panel {
+  width: 300px;
+  background: #fce1ec;
+  padding: 10px;
+  overflow-y: auto;
+  border-left: 2px solid #d8b4e2;
+}
+
+#map {
+  flex-grow: 1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f7f7f7;
+}
+
+button {
+  background-color: #b48ede;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 1024px) {
+  #side-panel {
+    display: none;
+  }
+}

@@ -1,37 +1,15 @@
 <!DOCTYPE html>
-<html lang="en-US">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Earthquake Visualization</title>
-  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <link href="https://api.mapbox.com/mapbox-gl-js/v2.16.1/mapbox-gl.css" rel="stylesheet">
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.16.1/mapbox-gl.js"></script>
 
-  <style>
-
-    body { margin: 0; font-family: sans-serif; }
-    #container { display: flex; height: 100vh; }
-    
-    #side-panel {
-      flex-basis: 450px;
-      padding: 10px;
-      background: #fafafa;
-      border-right: 1px solid #ccc;
-      overflow-y: auto;
-    }
-
-    #map { flex-grow: 1; }
-
-    table { width: 100%; border-collapse: collapse; border: 1px solid #ddd; }
-    th, td { text-align: left; padding: 8px; }
-    tr:nth-child(even) { background-color: #f2f2f2; }
-    button { margin: 10px 0; padding: 6px 12px; cursor: pointer; }
-
-    @media (max-width: 1024px) { #side-panel { display: none; } }
-  </style>
+  <link rel="stylesheet" href="css/main.css">
 </head>
-
 <body>
   <main id="container">
     <div id="side-panel">
@@ -44,66 +22,6 @@
     <div id="map"></div>
   </main>
 
-  <script>
-    
-    mapboxgl.accessToken = 'pk.eyJ1Ijoic21vaG5qMjIiLCJhIjoiY21oZWZoaXJzMGRldDJxb3J0aHAxNnR4ciJ9.IA4TUQ5IFDJgFkifqfpdcw';
-
-    const map = new mapboxgl.Map({
-      container: 'map',
-      style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [138, 38],
-      zoom: 5.5
-    });
-    map.addControl(new mapboxgl.NavigationControl(), 'top-left');
-
-    async function loadData() {
-      const eqRes = await fetch('assets/earthquakes.geojson');
-      const jpRes = await fetch('assets/japan.json');
-      const eq = await eqRes.json();
-      const jp = await jpRes.json();
-
-      map.on('load', () => {
-        map.addSource('japan', { type: 'geojson', data: jp });
-        map.addLayer({
-          id: 'japan-fill',
-          type: 'fill',
-          source: 'japan',
-          paint: { 'fill-color': '#66b3ff', 'fill-opacity': 0.5 }
-        });
-
-        map.addSource('eq', { type: 'geojson', data: eq });
-        map.addLayer({
-          id: 'eq-points',
-          type: 'circle',
-          source: 'eq',
-          paint: {
-            'circle-radius': 6,
-            'circle-color': '#ff4c4c',
-            'circle-stroke-width': 1,
-            'circle-stroke-color': '#fff'
-          }
-        });
-      });
-
-      const table = document.getElementById("eqTable");
-      function renderRows(list) {
-        while (table.rows.length > 1) table.deleteRow(1);
-        list.forEach(f => {
-          const r = table.insertRow();
-          r.insertCell(0).textContent = f.properties.id || "(none)";
-          r.insertCell(1).textContent = f.properties.mag;
-          r.insertCell(2).textContent = new Date(f.properties.time).toLocaleString();
-        });
-      }
-      renderRows(eq.features);
-
-      document.getElementById("sortBtn").addEventListener("click", () => {
-        const sorted = [...eq.features].sort((a, b) => b.properties.mag - a.properties.mag);
-        renderRows(sorted);
-      });
-    }
-
-    loadData();
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>

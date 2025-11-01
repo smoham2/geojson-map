@@ -1,39 +1,77 @@
-mapboxgl.accessToken = 'pk.eyJ1Ijoic21vaG5qMjIiLCJhIjoiY21oZWM1d2E3MGNxbTJzcHd3MnB0b3B3NCJ9.N59eWz63XAICm6Kxco36hg';
-
-const map = new mapboxgl.Map({
+const map = new maplibregl.Map({
   container: 'map',
-  style: 'mapbox://styles/mapbox/light-v11', 
   center: [138, 38],
-  zoom: 4.5
+  zoom: 5.5,
+  style: {
+    version: 8,
+    sources: {
+      osm: {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '© OpenStreetMap contributors'
+      }
+    },
+    layers: [
+      { id: 'osm', type: 'raster', source: 'osm' }
+    ]
+  }
 });
+map.addControl(new maplibregl.NavigationControl(), 'top-left');
 
-const japan = {
-  "type": "FeatureCollection",
-  "features": [{
-    "type": "Feature",
-    "geometry": { "type": "Polygon", "coordinates": [[[129,31],[146,31],[146,46],[129,46],[129,31]]] },
-    "properties": { "name": "Japan" }
-  }]
-};
+async function init() {
+  const [eqRes, jpRes] = await Promise.all([
+    fetch('assets/earthquakes.geojson'),
+    fetch('assets/japan.json')
+  ]);
+  const eq = await eqRes.json();
+  const jp = await jpRes.json();
 
-const earthquakes = {
-  "type": "FeatureCollection",
-  "features": [
-    { "type":"Feature","geometry":{"type":"Point","coordinates":[140,35]},"properties":{"id":1,"mag":5.2} },
-    { "type":"Feature","geometry":{"type":"Point","coordinates":[137,36]},"properties":{"id":2,"mag":6.1} }
-  ]
-};
+  map.on('load', () => {
+    map.addSource('japan', { type: 'geojson', data: jp });
+    map.addLayer({
+      id: 'japan-fill',
+      type: 'fill',
+      source: 'japan',
+      paint: { 'fill-color': '#b48ede', 'fill-opacity': 0.30 }
+    });
+    map.addLayer({
+      id: 'japan-outline',
+      type: 'line',
+      source: 'japan',
+      paint: { 'line-color': '#7a57c6', 'line-width': 1 }
+    });
 
-map.on('load', () => {
-  map.addSource('japan', { type: 'geojson', data: japan });
-  map.addLayer({
-    id: 'japan-fill', type: 'fill', source: 'japan',
-    paint: { 'fill-color': '#9ad0ff', 'fill-opacity': 0.35 }
+    map.addSource('eq', { type: 'geojson', data: eq });
+    map.addLayer({
+      id: 'eq-points',
+      type: 'circle',
+      source: 'eq',
+      paint: {
+        'circle-radius': 6,
+        'circle-color': '#ff4c4c',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#fff'
+      }
+    });
   });
 
-  map.addSource('eq', { type: 'geojson', data: earthquakes });
-  map.addLayer({
-    id: 'eq-points', type: 'circle', source: 'eq',
-    paint: { 'circle-radius': 7, 'circle-color': '#e84d4d', 'circle-stroke-width': 1, 'circle-stroke-color': '#fff' }
+  const table = document.getElementById('eqTable');
+  function renderRows(list) {
+    while (table.rows.length > 1) table.deleteRow(1);
+    list.forEach(f => {
+      const r = table.insertRow();
+      r.insertCell(0).textContent = f.properties.id ?? '(none)';
+      r.insertCell(1).textContent = f.properties.mag;
+      r.insertCell(2).textContent = new Date(f.properties.time).toLocaleDateString('en-US');
+    });
+  }
+  renderRows(eq.features);
+
+  document.getElementById('sortBtn').addEventListener('click', () => {
+    const sorted = [...eq.features].sort((a, b) => b.properties.mag - a.properties.mag);
+    renderRows(sorted);
   });
-});
+}
+
+init();
